@@ -1,7 +1,6 @@
-#!PS
-#timeout=600000
 $downloadLocation = 'C:\temp\BIOS_Updates\'
 
+# Model #s and their corresponding BIOS update URLS
 $biosUpdateURLS = @{
                     'Latitude 3410'='https://dl.dell.com/FOLDER07410413M/1/Latitude_3410_3510_1.9.0.exe'
                     'Latitude 3510'='https://dl.dell.com/FOLDER07410413M/1/Latitude_3410_3510_1.9.0.exe'
@@ -18,6 +17,7 @@ $biosUpdateURLS = @{
                     'XPS 15 9500'='https://dl.dell.com/FOLDER07401752M/1/XPS_9500_1.8.1.exe'
                     }
 
+# Model #s and their latest BIOS version
 $biosUpdateVersions = @{
                     'Latitude 3410'='1.9.0'
                     'Latitude 3510'='1.9.0'
@@ -34,7 +34,7 @@ $biosUpdateVersions = @{
                     'XPS 15 9500'='1.8.1'
                     }
 
-function create-DownloadFolder
+function Create-DownloadFolder
 {
     Param
     (
@@ -48,7 +48,7 @@ function create-DownloadFolder
     }
 }
 
-function downloadAndInstall-File
+function DownloadAndInstall-File
 {
     Param
     (
@@ -69,12 +69,12 @@ function downloadAndInstall-File
     Get-Process -Name $FilePath -ErrorAction SilentlyContinue | Wait-Process
 }
 
-function get-BiosVersion
+function Get-BiosVersion
 {
     # Install Dell CC if necessary
     If(!(test-path 'C:\Program Files (x86)\Dell\Command Configure\'))
     {
-        downloadAndInstall-File 'https://dl.dell.com/FOLDER06874295M/2/Dell-Command-Configure_N9DPF_WIN_4.4.0.86_A00.EXE' '/s'
+        DownloadAndInstall-File 'https://dl.dell.com/FOLDER06874295M/2/Dell-Command-Configure_N9DPF_WIN_4.4.0.86_A00.EXE' '/s'
     }
 
     
@@ -106,7 +106,7 @@ function get-BiosVersion
     return $biosVer
 }
 
-function install-BiosUpdate
+function Install-BiosUpdate
 {
     Param
     (
@@ -114,31 +114,33 @@ function install-BiosUpdate
         [string] $Model
     )
 
-    write-host $Model
+    Write-Host $Model
 
     $URL = $biosUpdateURLS.$Model
 
-    downloadAndInstall-File $URL '/s'
+    DownloadAndInstall-File $URL '/s'
 
 }
 
-create-DownloadFolder($downloadLocation)
+# Main
 
-# Determine Model #
-$Model = $(WMIC CSPRODUCT GET NAME)[2].trim()
+Create-DownloadFolder($downloadLocation)
+
+# Determine Model
+$model = $(WMIC CSPRODUCT GET NAME)[2].trim()
 
 # Check if it already has latest update
-$BiosVersion = get-BiosVersion
-$BiosNeededVersion = $biosUpdateVersions.$model
+$biosVersion = Get-BiosVersion
+$biosNeededVersion = $biosUpdateVersions.$model
 
-If ($BiosVersion -eq $BiosNeededVersion) {
-    Write-Host("Bios version is $BiosVersion")
-    Write-Host("Bios needed is $BiosNeededVersion")
+If ($biosVersion -eq $biosNeededVersion) {
+    Write-Host("Bios version is $biosVersion")
+    Write-Host("Bios needed is $biosNeededVersion")
     Write-Host("These are the same. Exiting...")
     exit 0
 }
 
-write-host("Model is $model")
+Write-Host("Model is $model")
 
-install-BiosUpdate($Model)
+Install-BiosUpdate($model)
 
