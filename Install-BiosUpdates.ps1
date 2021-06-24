@@ -18,6 +18,22 @@ $biosUpdateURLS = @{
                     'XPS 15 9500'='https://dl.dell.com/FOLDER07401752M/1/XPS_9500_1.8.1.exe'
                     }
 
+$biosUpdateVersions = @{
+                    'Latitude 3410'='1.9.0'
+                    'Latitude 3510'='1.9.0'
+                    'Latitude 3420'='1.8.0'
+                    'Latitude 3520'='1.8.0'
+                    'Latitude 5410'='1.6.0'
+                    'Latitude 5510'='1.6.0'
+                    'Precision 3550'='1.6.0'
+                    'Optiplex 3080'='2.1.1'
+                    'Optiplex 7080'='1.4.0'
+                    'Precision 3551'='1.6.0'
+                    'Latitude 5411'='1.6.0'
+                    'Latitude 5511'='1.6.0'
+                    'XPS 15 9500'='1.8.1'
+                    }
+
 function create-DownloadFolder
 {
     Param
@@ -108,12 +124,21 @@ function install-BiosUpdate
 
 create-DownloadFolder($downloadLocation)
 
-# get-BiosVersion
-
 # Determine Model #
 $Model = $(WMIC CSPRODUCT GET NAME)[2].trim()
 
-write-host $model
+# Check if it already has latest update
+$BiosVersion = get-BiosVersion
+$BiosNeededVersion = $biosUpdateVersions.$model
+
+If ($BiosVersion -eq $BiosNeededVersion) {
+    Write-Host("Bios version is $BiosVersion")
+    Write-Host("Bios needed is $BiosNeededVersion")
+    Write-Host("These are the same. Exiting...")
+    exit 0
+}
+
+write-host("Model is $model")
 
 install-BiosUpdate($Model)
 
